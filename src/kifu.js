@@ -68,6 +68,23 @@ var piece_string_map = {
   RY: '竜'
 };
 
+var PiecePromoteMap = {
+  FU: 'TO',
+  KY: 'NY',
+  KE: 'NK',
+  GI: 'NG',
+  KI: null,
+  KA: 'UM',
+  HI: 'RY',
+  OU: null,
+  TO: null,
+  NY: null,
+  NK: null,
+  NG: null,
+  UM: null,
+  RY: null
+};
+
 /*
  * Kifu object
  */
@@ -158,6 +175,364 @@ Kifu.prototype.extend({
     }
   },
 
+  addToMovableList: function(list, cell, x, y, piece, black, from) {
+    if (cell && cell.piece == piece && cell.black == black) {
+	if (x != from.x || y != from.y) {
+	    list.push({x:x, y:y});
+	    return true;
+	}
+    }
+    return false;
+  },
+
+  getMovableList: function(board, to, from, piece, black, promote) {
+    var list = [];
+    var x, y;
+    var yd = (black ? -1 : 1);
+    switch (piece) {
+    case 'OU':
+    case 'FU':
+	break;
+
+    case 'KY':
+	y = to.y - yd;
+	while (y > 0 && y < 10) {
+	    var b = board[to.x][y];
+	    if (b) {
+		if (this.addToMovableList(list, b, to.x, y,
+					  piece, black, from)) {
+		    return list;
+		}
+		break;
+	    }
+	    y -= yd;
+	}
+	break;
+
+    case 'KE':
+	y = to.y - yd - yd;
+	if (y > 0 && y < 10) {
+	    x = to.x + 1;
+	    if (x > 0 && x < 10)
+		this.addToMovableList(list, board[x][y], x, y,
+				      piece, black, from);
+	    x = to.x - 1;
+	    if (x > 0 && x < 10)
+		this.addToMovableList(list, board[x][y], x, y,
+				      piece, black, from);
+	}
+	break;
+
+    case 'GI':
+	y = to.y - yd;
+	if (y > 0 && y < 10) {
+	    x = to.x;
+	    if (x > 0 && x < 10)
+		this.addToMovableList(list, board[x][y], x, y,
+				      piece, black, from);
+	    x = to.x + 1;
+	    if (x > 0 && x < 10)
+		this.addToMovableList(list, board[x][y], x, y,
+				      piece, black, from);
+	    x = to.x - 1;
+	    if (x > 0 && x < 10)
+		this.addToMovableList(list, board[x][y], x, y,
+				      piece, black, from);
+	}
+	y = to.y + yd;
+	if (y > 0 && y < 10) {
+	    x = to.x + 1;
+	    if (x > 0 && x < 10)
+		this.addToMovableList(list, board[x][y], x, y,
+				      piece, black, from);
+	    x = to.x - 1;
+	    if (x > 0 && x < 10)
+		this.addToMovableList(list, board[x][y], x, y,
+				      piece, black, from);
+	}
+	break;
+
+    case 'TO':
+    case 'NY':
+    case 'NK':
+    case 'NG':
+    case 'KI':
+	y = to.y - yd;
+        if (y > 0 && y < 10) {
+	    x = to.x;
+	    if (x > 0 && x < 10)
+		this.addToMovableList(list, board[x][y], x, y,
+				      piece, black, from);
+	    x = to.x + 1;
+	    if (x > 0 && x < 10)
+		this.addToMovableList(list, board[x][y], x, y,
+				      piece, black, from);
+	    x = to.x - 1;
+	    if (x > 0 && x < 10)
+		this.addToMovableList(list, board[x][y], x, y,
+				      piece, black, from);
+	}
+	y = to.y;
+	if (y > 0 && y < 10) {
+	    x = to.x + 1;
+	    if (x > 0 && x < 10)
+		this.addToMovableList(list, board[x][y], x, y,
+				      piece, black, from);
+	    x = to.x - 1;
+	    if (x > 0 && x < 10)
+		this.addToMovableList(list, board[x][y], x, y,
+				      piece, black, from);
+	}
+	y = to.y + yd;
+	if (y > 0 && y < 10) {
+	    x = to.x;
+	    if (x > 0 && x < 10)
+		this.addToMovableList(list, board[x][y], x, y,
+				      piece, black, from);
+	}
+	break;
+
+    case 'UM':
+	y = to.y;
+	x = to.x + 1;
+	if (x > 0 && x < 10)
+	    this.addToMovableList(list, board[x][y], x, y,
+				  piece, black, from);
+	x = to.x - 1;
+	if (x > 0 && x < 10)
+	    this.addToMovableList(list, board[x][y], x, y,
+				  piece, black, from);
+
+	x = to.x;
+	y = to.y + 1;
+	if (y > 0 && y < 10)
+	    this.addToMovableList(list, board[x][y], x, y,
+				  piece, black, from);
+	y = to.y - 1;
+	if (y > 0 && y < 10)
+	    this.addToMovableList(list, board[x][y], x, y,
+				  piece, black, from);
+	// fall through
+    case 'KA':
+	y = to.y - 1;
+	x = to.x + 1;
+	while (y > 0 && y < 10 && x > 0 && x < 10) {
+	    var b = board[x][y];
+	    if (b) {
+		this.addToMovableList(list, b, x, y,
+				      piece, black, from);
+		break;
+	    }
+	    y -= 1;
+	    x += 1;
+	}
+	y = to.y - 1;
+	x = to.x - 1;
+	while (y > 0 && y < 10 && x > 0 && x < 10) {
+	    var b = board[x][y];
+	    if (b) {
+		this.addToMovableList(list, b, x, y,
+				      piece, black, from);
+		break;
+	    }
+	    y -= 1;
+	    x -= 1;
+	}
+	y = to.y + 1;
+	x = to.x + 1;
+	while (y > 0 && y < 10 && x > 0 && x < 10) {
+	    var b = board[x][y];
+	    if (b) {
+		this.addToMovableList(list, b, x, y,
+				      piece, black, from);
+		break;
+	    }
+	    y += 1;
+	    x += 1;
+	}
+	y = to.y + 1;
+	x = to.x - 1;
+	while (y > 0 && y < 10 && x > 0 && x < 10) {
+	    var b = board[x][y];
+	    if (b) {
+		this.addToMovableList(list, b, x, y,
+				      piece, black, from);
+		break;
+	    }
+	    y += 1;
+	    x -= 1;
+	}
+	break;
+
+    case 'RY':
+	y = to.y - 1;
+	if (y > 0 && y < 10) {
+	    x = to.x - 1;
+	    if (x > 0 && x < 10)
+		this.addToMovableList(list, board[x][y], x, y,
+				      piece, black, from);
+	    x = to.x + 1;
+	    if (x > 0 && x < 10)
+		this.addToMovableList(list, board[x][y], x, y,
+				      piece, black, from);
+	}
+	y = to.y + 1;
+	if (y > 0 && y < 10) {
+	    x = to.x - 1;
+	    if (x > 0 && x < 10)
+		this.addToMovableList(list, board[x][y], x, y,
+				      piece, black, from);
+	    x = to.x + 1;
+	    if (x > 0 && x < 10)
+		this.addToMovableList(list, board[x][y], x, y,
+				      piece, black, from);
+	}
+	// fall through
+    case 'HI':
+	x = to.x;
+	y = to.y - 1;
+	while (y > 0 && y < 10) {
+	    var b = board[x][y];
+	    if (b) {
+		this.addToMovableList(list, b, x, y,
+				      piece, black, from);
+		break;
+	    }
+	    y -= 1;
+	}
+	y = to.y + 1;
+	while (y > 0 && y < 10) {
+	    var b = board[x][y];
+	    if (b) {
+		this.addToMovableList(list, b, x, y,
+				      piece, black, from);
+		break;
+	    }
+	    y += 1;
+	}
+ 
+	y = to.y;
+	x = to.x - 1;
+	while (x > 0 && x < 10) {
+	    var b = board[x][y];
+	    if (b) {
+		this.addToMovableList(list, b, x, y,
+				      piece, black, from);
+		break;
+	    }
+	    x -= 1;
+	}
+	x = to.x + 1;
+	while (x > 0 && x < 10) {
+	    var b = board[x][y];
+	    if (b) {
+		this.addToMovableList(list, b, x, y,
+				      piece, black, from);
+		break;
+	    }
+	    x += 1;
+	}
+	break;
+    }
+
+    return list;
+  },
+
+  getDiffFlag: function(from, to) {
+    var diff = to - from;
+    if (diff > 0) return 1;
+    else if (diff < 0) return -1;
+    else return 0;
+  },
+
+  getYDirNotation: function(dir) {
+    if (dir > 0) return '引';
+    else if (dir < 0) return '上';
+    else return '寄';
+  },
+
+  getXDirNotation: function(dir) {
+    if (dir > 0) return '右';
+    else if (dir < 0) return '左';
+    else return '直';
+  },
+
+
+  makeMoveDirection: function (to, from, piece, black, mvl) {
+    var flag, n, other;
+
+    if (from.x == 0) return '';
+
+    flag = (black ? 1 : -1);
+    n = mvl.length;
+    switch (n) {
+    case 1:
+	var d1, d2;
+	other = mvl[0];
+	d1 = this.getDiffFlag(from.y,  to.y);
+	d2 = this.getDiffFlag(other.y, to.y);
+	if (d1 == d2) {
+	    if (piece == 'UM' || piece == 'RY') {
+		d1 = this.getDiffFlag(from.x, other.x) * flag;
+		if (d1 > 0) return '右';
+		else return '左';
+	    }
+	    else {
+		d1 = this.getDiffFlag(from.x, to.x) * flag;
+		return this.getXDirNotation(d1);
+	    }
+	}
+	else {
+	    d1 *= flag;
+	    return this.getYDirNotation(d1);
+	}
+	break;
+
+    case 2:
+    case 3:
+    case 4:
+    case 5:
+	var dy = this.getDiffFlag(from.y, to.y);
+	var dx = this.getDiffFlag(from.x, to.x);
+	var y_same = 0;
+	var x_same = 0;
+	var diff;
+	for (var i = 0; i < n; i++) {
+	    other = mvl[i];
+	    diff = this.getDiffFlag(other.y, to.y);
+	    if (dy == diff) ysame++;
+	    diff = this.getDiffFlag(other.x, to.x);
+	    if (dx == diff) xsame++;
+	}
+
+	if (ysame == 0) {
+	    return this.getYDirNotation(dy * flag);
+	}
+	else if (xsame == 0) {
+	    return this.getXDirNotation(dx * flag);
+	}
+	else {
+	    return this.getXDirNotation(dx * flag) + 
+		   this.getYDirNotation(dy * flag);
+	}
+	break;
+    }
+
+    return '';
+  },
+
+  isPromotable: function(to, from, piece, black) {
+    if (! PiecePromoteMap[piece]) return false;
+
+    if (black) {
+      if (to.y < 4 || from.y < 4) return true;
+    }
+    else {
+      if (to.y > 6 || from.y > 6) return true;
+    }
+    return false;
+  },
+
   parse: function(format) {
     if (format) {
       this.info.format = format;
@@ -174,6 +549,7 @@ Kifu.prototype.extend({
 
     return this;
   },
+
 
   prepare: function() {
     var black        = this.info.player_start == 'black';
@@ -213,16 +589,34 @@ Kifu.prototype.extend({
       }
 
       if (!move.str) {
+	var mvl;
         var str = '';
-        str += number_x_map[to.x];
-        str += number_y_map[to.y];
+        if (move_prev && to.x == move_prev.to.x && to.y == move_prev.to.y) {
+	  str += '同';
+	}
+	else {
+	  str += number_x_map[to.x];
+	  str += number_y_map[to.y];
+	}
+	str += piece_string_map[from.piece]
+
         if (from.piece == to.piece) {
-          str += piece_string_map[to.piece];
-        } else {
-          str += piece_string_map[from.piece] + '成';
+	    mvl = this.getMovableList(suite.board, to, from, from.piece,
+				      black, false);
+	  if (mvl.length > 0)
+	      str += this.makeMoveDirection(to, from, from.piece, black, mvl);
+          if (from.x > 0 && this.isPromotable(to, from, from.piece, black))
+	      str += '不成';
         }
-        if (!from.x) {
-          str += '打';
+	else {
+	    mvl = this.getMovableList(suite.board, to, from, from.piece,
+				      black, true);
+	  if (mvl.length > 0)
+	      str += this.makeMoveDirection(to, from, from.piece, black, mvl);
+	  str += '成';
+        }
+        if (! from.x) {
+	  if (mvl.length > 0) str += '打';
         }
         move.str = str;
       }
@@ -376,12 +770,12 @@ Kifu.Move.prototype.extend({
     return move;
   },
 
-  setMove: function(num, from, to, piece, options) {
+  setMove: function(num, from, to, piece_from, piece_to, options) {
     var records = this.records;
     records[num] || (records[num] = {});
     var move = records[num];
-    move.from = {x: from[0], y: from[1]};
-    move.to   = {piece: piece, x: to[0], y: to[1]};
+    move.from = {piece: piece_from, x: from[0], y: from[1]};
+    move.to   = {piece: piece_to,   x: to[0],   y: to[1]};
     move.type = 'move';
     for (var property in options) {
       move[property] = options[property];
@@ -903,12 +1297,12 @@ var kifu_map = {
   '飛':   'HI',
   '王':   'OU',
   '玉':   'OU',
-  '歩成': 'TO',
-  '香成': 'NY',
-  '桂成': 'NK',
-  '銀成': 'NG',
-  '角成': 'UM',
-  '飛成': 'RY',
+  '歩成': ['FU', 'TO'],
+  '香成': ['KY', 'NY'],
+  '桂成': ['KE', 'NK'],
+  '銀成': ['GI', 'NG'],
+  '角成': ['KA', 'UM'],
+  '飛成': ['HI', 'RY'],
   'と':   'TO',
   '成香': 'NY',
   '成桂': 'NK',
@@ -1027,18 +1421,24 @@ Kifu.Kif.prototype.extend({
         return true;
       }
 
+      var piece_to, piece_from;
       var to = [kifu_map[move.charAt(0)], kifu_map[move.charAt(1)]];
       if (move.substr(2).match(/(.*)\(([1-9])([1-9])\)/)) {
-        var piece = kifu_map[RegExp.$1];
-        var from  = [parseInt(RegExp.$2), parseInt(RegExp.$3)];
-        move.match(/(.*)\(/);
-        var str   = RegExp.$1;
-      } else {
-        var piece = kifu_map[move.charAt(2)];
-        var from  = [0, 0];
-        var str   = move;
+	var piece2 = kifu_map[RegExp.$1];
+        var from = [parseInt(RegExp.$2), parseInt(RegExp.$3)];
+	if (piece2 instanceof Array) {
+	    piece_from = piece2[0]
+	    piece_to   = piece2[1]
+	}
+	else {
+	    piece_to = piece_from = piece2;
+	}
       }
-      kifu.moves.setMove(num, from, to, piece, {str: str});
+      else {
+	piece_to = piece_from = kifu_map[move.charAt(2)];
+        var from  = [0, 0];
+      }
+      kifu.moves.setMove(num, from, to, piece_from, piece_to);
 
       return true;
     }
