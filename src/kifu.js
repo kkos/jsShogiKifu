@@ -533,6 +533,42 @@ Kifu.prototype.extend({
     return false;
   },
 
+  makeMoveStr: function(move, move_prev, black, board) {
+    var mvl;
+    var str = '';
+    var from = move.from;
+    var to   = move.to;
+
+    if (move_prev && to.x == move_prev.to.x && to.y == move_prev.to.y) {
+      str += '同';
+    }
+    else {
+      str += number_x_map[to.x];
+      str += number_y_map[to.y];
+    }
+    str += piece_string_map[from.piece]
+
+    if (from.piece == to.piece) {
+      mvl = this.getMovableList(board, to, from, from.piece, black, false);
+      if (mvl.length > 0)
+	str += this.makeMoveDirection(to, from, from.piece, black, mvl);
+        if (from.x > 0 && this.isPromotable(to, from, from.piece, black))
+	  str += '不成';
+    }
+    else {
+      mvl = this.getMovableList(board, to, from, from.piece, black, true);
+      if (mvl.length > 0)
+	str += this.makeMoveDirection(to, from, from.piece, black, mvl);
+      str += '成';
+    }
+
+    if (! from.x) {
+      if (mvl.length > 0) str += '打';
+    }
+
+    return str;
+  },
+
   parse: function(format) {
     if (format) {
       this.info.format = format;
@@ -589,35 +625,7 @@ Kifu.prototype.extend({
       }
 
       if (!move.str) {
-	var mvl;
-        var str = '';
-        if (move_prev && to.x == move_prev.to.x && to.y == move_prev.to.y) {
-	  str += '同';
-	}
-	else {
-	  str += number_x_map[to.x];
-	  str += number_y_map[to.y];
-	}
-	str += piece_string_map[from.piece]
-
-        if (from.piece == to.piece) {
-	    mvl = this.getMovableList(suite.board, to, from, from.piece,
-				      black, false);
-	  if (mvl.length > 0)
-	      str += this.makeMoveDirection(to, from, from.piece, black, mvl);
-          if (from.x > 0 && this.isPromotable(to, from, from.piece, black))
-	      str += '不成';
-        }
-	else {
-	    mvl = this.getMovableList(suite.board, to, from, from.piece,
-				      black, true);
-	  if (mvl.length > 0)
-	      str += this.makeMoveDirection(to, from, from.piece, black, mvl);
-	  str += '成';
-        }
-        if (! from.x) {
-	  if (mvl.length > 0) str += '打';
-        }
+        var str = this.makeMoveStr(move, move_prev, black, suite.board);
         move.str = str;
       }
 
