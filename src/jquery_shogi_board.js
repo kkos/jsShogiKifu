@@ -473,14 +473,22 @@ $.fn.shogiBoard = function(initial_kifu, options) {
         RY: '竜'
       };
 
-      var createPiece = function(piece, black_p) {
+      var createPiece = function(piece, number, black_p) {
         if (piece) {
+          if (number == 0) return '';
+
           var text = pieceToString[piece];
           if (piece == 'OU' && config[black_p ? 'black_king' : 'white_king'] == 'jewel_king')
             text = '玉';
+
+          var numPart = [];
+          if (number > 1) {
+            numPart.push(document.createElement('br'), document.createTextNode(number));
+          }
+
           return $('<div class="jsb_text_piece">').
             addClass(black_p ? 'jsb_text_piece_black' : 'jsb_text_piece_white').
-            text(text).
+            append(document.createTextNode(text), numPart).
             css({
                 width: config['board_cell_width'],
                 'font-size': fontsize,
@@ -498,18 +506,9 @@ $.fn.shogiBoard = function(initial_kifu, options) {
 
       return function(cell, piece, black_p) {
         if (cell.jsbIsStand()) {
-          var diff = cell.jsbGetNumber() - cell.children().length;
-          if (diff > 0) {
-            while (diff-- > 0) {
-              cell.append(createPiece(piece, black_p));
-            }
-          } else if (0 > diff) {
-            while (0 > diff++) {
-              cell.children(':last').remove();
-            }
-          }
+          cell.html(createPiece(piece, cell.jsbGetNumber(), black_p));          
         } else {
-          cell.html(createPiece(piece, black_p));
+          cell.html(createPiece(piece, 1, black_p));
         }
       };
     };
