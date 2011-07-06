@@ -113,21 +113,14 @@ $.fn.shogiBoard = function(initial_kifu, options) {
 
     initialized = true;
 
-    if (initial_kifu)
+    if (initial_kifu) {
       load(initial_kifu);
-  };
-
-  var load = function(new_kifu) {
-    if (!initialized) {
-      initial_kifu = new_kifu;
-      return;
     }
 
-    kifu = new_kifu;
-    boardSet();
-    playerSet();
     registerFunctions();
-    moveStringsSet();
+    jsbElementById('moves').change(function() {
+      return moveTo($(this).val());
+    });
 
     if (config['move_to']) {
       var m = config['move_to'];
@@ -142,6 +135,19 @@ $.fn.shogiBoard = function(initial_kifu, options) {
       if (top > sh - h)  top = sh - h;
       $(list_box).attr('scrollTop', top);
     }
+  };
+
+  var load = function(new_kifu) {
+    if (!initialized) {
+      initial_kifu = new_kifu;
+      return;
+    }
+
+    kifu = new_kifu;
+
+    boardSet();
+    playerSet();
+    moveStringsSet();
   };
 
   var jsbElementBoardCell = function(x, y) {
@@ -238,6 +244,8 @@ $.fn.shogiBoard = function(initial_kifu, options) {
     var move_records = kifu.moves.records;
     var ele          = jsbElementById('moves');
     var nsp, mark;
+
+    ele.html('<option value="0">開始局面</option>');
     for (var i in move_records) {
       var move = move_records[i];
       if (move['str']) {
@@ -259,9 +267,10 @@ $.fn.shogiBoard = function(initial_kifu, options) {
 
     if (ele.selectmenu)
       ele.selectmenu('refresh', true);
-    ele.change(function() {
-      return moveTo($(this).val());
-    });
+
+    //ele.change(function() {
+    //  return moveTo($(this).val());
+    //});
   };
 
   var moveTo = function(num) {
@@ -340,6 +349,28 @@ $.fn.shogiBoard = function(initial_kifu, options) {
     } else {
       tap = 'click';
     }
+
+    jsbElementById('manual_update')[tap](function() {
+      var opts = {
+	  url: initial_kifu.url,
+	  ifModified: true
+      };
+
+      Kifu.ajax(opts, 'kif', function(new_kifu) {
+        var curr_step = null;
+        if (kifu) curr_step = kifu.step;
+
+        load(new_kifu);
+
+        if (curr_step != null) {
+          var num = kifu.moves.getLastMoveNum();
+          if (curr_step > num) curr_step = num;
+          moveTo(curr_step);
+        }
+      });
+	
+      return true;
+    });
 
     jsbElementById('next')[tap](function() {
       return moveNext();

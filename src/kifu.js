@@ -88,8 +88,8 @@ var PiecePromoteMap = {
 /*
  * Kifu object
  */
-var Kifu = (function(source, format) {
-  return new Kifu.initialize(source, format);
+var Kifu = (function(source, format, url) {
+    return new Kifu.initialize(source, format, url);
 });
 
 Kifu.extend = Kifu.prototype.extend = function(source) {
@@ -645,10 +645,11 @@ Kifu.prototype.extend({
 });
 
 Kifu.extend({
-  initialize: function(source, format) {
+  initialize: function(source, format, url) {
     this.suite_init = Kifu.Suite();
     this.info       = {player_start: 'black'};
     this.moves      = Kifu.Move();
+    this.url        = url;
 
     if (source) {
       this.source(source);
@@ -663,7 +664,7 @@ Kifu.extend({
     options.dataType = 'text';
     options.type     = 'GET';
     options.success  = function(source) {
-      return func_obj(Kifu(source, format));
+      return func_obj(Kifu(source, format, options.url));
     };
     return jQuery.ajax(options);
   },
